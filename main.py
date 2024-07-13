@@ -4,15 +4,23 @@ import random
 
 
 def ball_animation():
-    global ball_speed_x, ball_speed_y
+    global ball_speed_x, ball_speed_y, player_score, opponent_score, score_time
     # movement
     ball.x += ball_speed_x
     ball.y += ball_speed_y
 
     if ball.top <= 0 or ball.bottom >= screen_height:
         ball_speed_y *= -1
-    if ball.left <= 0 or ball.right >= screen_width:
-        ball_reset()
+    
+    # player score
+    if ball.left <= 0:
+        player_score += 1
+        score_time = pygame.time.get_ticks()
+
+    # opponent score
+    if ball.right >= screen_width:
+        opponent_score += 1
+        score_time = pygame.time.get_ticks()
 
     if ball.colliderect(player) or ball.colliderect(opponent):
         ball_speed_x *= -1
@@ -35,10 +43,28 @@ def opponent_animation():
         opponent.bottom = screen_height
 
 def ball_reset():
-    global ball_speed_y, ball_speed_x
+    global ball_speed_y, ball_speed_x, score_time
+    
+    current_time = pygame.time.get_ticks()
     ball.center = (screen_width/2, screen_height/2)
-    ball_speed_y *= random.choice((1, -1))
-    ball_speed_x *= random.choice((1, -1))
+
+    if current_time - score_time < 700:
+        number_3 = font.render('3', False, light_grey)
+        screen.blit(number_3, (screen_width/2 - 10, screen_height/2 + 20))
+    if 700 < current_time - score_time < 1400:
+        number_2 = font.render('2', False, light_grey)
+        screen.blit(number_2, (screen_width/2 - 10, screen_height/2 + 20))
+    if 1400 < current_time - score_time < 2100:
+        number_1 = font.render('1', False, light_grey)
+        screen.blit(number_1, (screen_width/2 - 10, screen_height/2 + 20))
+          
+    if current_time - score_time < 2100:
+        ball_speed_x = 0
+        ball_speed_y = 0
+    else:
+        ball_speed_y = 7 * random.choice((1, -1))
+        ball_speed_x = 7 * random.choice((1, -1))
+        score_time = None
 
 # general setup
 pygame.init()
@@ -66,6 +92,10 @@ opponent_speed = 7
 # text variables
 player_score = 0
 opponent_score = 0
+font = pygame.font.Font("freesansbold.ttf", 32)
+
+# timer
+score_time = True
 
 while True:
     # handling input
@@ -95,6 +125,15 @@ while True:
     pygame.draw.rect(screen, light_grey, opponent)
     pygame.draw.ellipse(screen, light_grey, ball)
     pygame.draw.aaline(screen, light_grey, (screen_width/2, 0), (screen_width/2, screen_height))
+
+    player_text = font.render(f'{player_score}', False, light_grey)
+    screen.blit(player_text, (screen_width/2 + 15, screen_height/2))
+
+    opponent_text = font.render(f'{opponent_score}', False, light_grey)
+    screen.blit(opponent_text, (screen_width/2 - 30, screen_height/2))
+
+    if score_time:
+        ball_reset()
 
     # updating the window
     pygame.display.flip()
